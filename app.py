@@ -1,6 +1,15 @@
 import tkinter as tk
 import tkinter.font as tkFont
 from PIL import Image, ImageTk
+import numpy as np
+
+
+class ImageRow:
+    def __init__(self, master, data, data_dir='data'):
+        self.frame = tk.Frame(master)
+        self.frame.pack(side=tk.TOP)
+        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'))
+                              for (name, path) in data]
 
 
 class ImageWidget:
@@ -23,6 +32,7 @@ class ImageWidget:
         self.label = tk.Label(frame, text="\n", fg="black", font=tkFont.Font(size=16))
         self.label.pack()
 
+
     def on_click(self, event):
         bbox = self.canvas.bbox(tk.ALL)
         if bbox[0] <= event.x <= bbox[2] and bbox[1] <= event.y <= bbox[3]: # true anyway since event is caught?
@@ -34,13 +44,15 @@ class ImageWidget:
                 self.widget_state += 1
 
 
-
-
 def main():
+
+    data = np.loadtxt('data.dat', delimiter=',', dtype=str)
+    data_chunks = (data[:3], data[3:])
+
     root = tk.Tk()
-    image_widget1 = ImageWidget(root, "data/peppers.png", 'Scientist \n 1')
-    image_widget2 = ImageWidget(root, "data/peppers.png", 'Scientist \n 2')
-    image_widget3 = ImageWidget(root, "data/peppers.png", 'Scientist \n 3')
+
+    frames = [ImageRow(root, chunk) for chunk in data_chunks]
+
     root.mainloop()
 
 
