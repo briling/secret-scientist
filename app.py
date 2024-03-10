@@ -43,11 +43,13 @@ class ImageWidget:
             else:
                 self.label.config(text=self.label_text)
             self.widget_state += 1
-            self.score.set(self.score.get() - 1)
+            new_score = self.score.get() - 1
+            if new_score > 0:
+                self.score.set(new_score)
 
 
 class PeopleChoice:
-    def __init__(self, master, image_paths, SCORE,
+    def __init__(self, master, image_paths, SCORE, CORRECT,
                  image_size=(128,128), padding=(4,4),
                  switch_pics=('data/switch_camera.png', 'data/switch_camera_red.png')):
 
@@ -56,6 +58,7 @@ class PeopleChoice:
         self.widget_state = 0
         self.first_switch = 1
         self.score = SCORE
+        self.correct = CORRECT
 
         def put_photo(master, photo):
             frame = tk.Frame(master)
@@ -77,15 +80,21 @@ class PeopleChoice:
         self.canvas1.create_image(0, 0, anchor=tk.NW, image=self.photos[not self.widget_state])
         self.canvas2.create_image(0, 0, anchor=tk.NW, image=self.photos[self.widget_state])
         self.widget_state = (self.widget_state+1)%2
+        self.correct.set(not self.correct.get())
         if self.first_switch:
             self.first_switch = 0
             self.canvas_switch.create_image(0, 0, anchor=tk.NW, image=self.switch_pics[1])
         else:
-            self.score.set(self.score.get() - 1)
+            new_score = self.score.get() - 1
+            if new_score > 0:
+                self.score.set(new_score)
 
 
 class GameControls:
-    def __init__(self, master, SCORE, TOTAL, padding=(4,4)):
+    def __init__(self, master, SCORE, TOTAL, CORRECT, padding=(4,4)):
+        self.score = SCORE
+        self.total = TOTAL
+        self.correct = CORRECT
         self.frame = tk.Frame(master)
         self.frame.pack(side=tk.TOP, padx=16*padding[0], pady=16*padding[1])
         label1 = tk.Label(self.frame, text='SCORE:', fg="black", font=tkFont.Font(size=28))
@@ -97,20 +106,29 @@ class GameControls:
         label2.pack()
         self.label_total.pack()
 
+        self.button = tk.Button(self.frame, text="SUBMIT", font=tkFont.Font(size=28), command=self.submit)
+        self.button.pack()
+
+    def submit(self):
+        score = self.score.get()
+        self.total.set(self.total.get() + (self.correct.get()*2-1)*score)
+
 
 def main():
 
     data = np.loadtxt('data.dat', delimiter=',', dtype=str)
     data_chunks = (data[:3], data[3:])
+    if_correct = True  # if the pic order is correct or not
 
     root = tk.Tk()
 
     SCORE = tk.IntVar(value=sum(len(x) for x in data_chunks)*3)
     TOTAL = tk.IntVar(value=0)
+    CORRECT = tk.BooleanVar(value=if_correct)
 
     frame1 = tk.Frame(root)
     frame1.pack(side=tk.LEFT)
-    PeopleChoice(frame1, ('data/clock.png', 'data/moon.png'), SCORE)
+    PeopleChoice(frame1, ('data/clock.png', 'data/moon.png'), SCORE, CORRECT)
 
     frame2 = tk.Frame(root)
     frame2.pack(side=tk.LEFT)
@@ -119,7 +137,7 @@ def main():
 
     frame3 = tk.Frame(root)
     frame3.pack(side=tk.LEFT)
-    GameControls(frame3, SCORE, TOTAL)
+    GameControls(frame3, SCORE, TOTAL, CORRECT)
 
     root.mainloop()
 
