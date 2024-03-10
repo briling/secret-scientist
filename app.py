@@ -91,7 +91,7 @@ class PeopleChoice:
 
 
 class GameControls:
-    def __init__(self, master, SCORE, TOTAL, CORRECT, padding=(4,4)):
+    def __init__(self, master, SCORE, TOTAL, CORRECT, post_submit_hook, padding=(4,4)):
         self.score = SCORE
         self.total = TOTAL
         self.correct = CORRECT
@@ -106,39 +106,51 @@ class GameControls:
         label2.pack()
         self.label_total.pack()
 
+        self.post_submit_hook = post_submit_hook
         self.button = tk.Button(self.frame, text="SUBMIT", font=tkFont.Font(size=28), command=self.submit)
         self.button.pack()
+
 
     def submit(self):
         score = self.score.get()
         self.total.set(self.total.get() + (self.correct.get()*2-1)*score)
+        self.post_submit_hook()
 
 
 def main():
 
+    # TODO load data, make an iterator etc
     data = np.loadtxt('data.dat', delimiter=',', dtype=str)
-    data_chunks = (data[:3], data[3:])
-    if_correct = True  # if the pic order is correct or not
+    #
 
     root = tk.Tk()
 
-    SCORE = tk.IntVar(value=sum(len(x) for x in data_chunks)*3)
+    SCORE = tk.IntVar(value=0)
     TOTAL = tk.IntVar(value=0)
-    CORRECT = tk.BooleanVar(value=if_correct)
+    CORRECT = tk.BooleanVar(value=False)
 
-    frame1 = tk.Frame(root)
-    frame1.pack(side=tk.LEFT)
-    PeopleChoice(frame1, ('data/clock.png', 'data/moon.png'), SCORE, CORRECT)
+    frames = [tk.Frame(root) for i in range(3)]
+    [frame.pack(side=tk.LEFT) for frame in frames]
 
-    frame2 = tk.Frame(root)
-    frame2.pack(side=tk.LEFT)
-    for i, chunk in enumerate(data_chunks):
-        frame = ImageRow(frame2, chunk, SCORE)
+    def reset_problem():
 
-    frame3 = tk.Frame(root)
-    frame3.pack(side=tk.LEFT)
-    GameControls(frame3, SCORE, TOTAL, CORRECT)
+        # TODO get the data from an iterator or something
+        data_chunks = (data[:3], data[3:])
+        if_correct = True  # if the pic order is correct or not
+        person1 = 'data/clock.png'
+        person2 = 'data/moon.png'
+        #
 
+        SCORE.set(sum(len(x) for x in data_chunks)*3)
+        CORRECT.set(if_correct)
+        for widgets in frames[0].winfo_children() + frames[1].winfo_children():
+            widgets.destroy()
+        PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
+        for i, chunk in enumerate(data_chunks):
+            frame = ImageRow(frames[1], chunk, SCORE)
+
+    GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
+    reset_problem()
     root.mainloop()
 
 
