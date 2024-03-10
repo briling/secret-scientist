@@ -1,7 +1,12 @@
+import random
+import numpy as np
 import tkinter as tk
 import tkinter.font as tkFont
 from PIL import Image, ImageTk
-import numpy as np
+
+
+def pop_random(lst):
+    return lst.pop(random.randrange(0, len(lst)))
 
 
 class ImageRow:
@@ -117,11 +122,40 @@ class GameControls:
         self.post_submit_hook()
 
 
-def main():
+def load_data(data_path, randomize, people_dir='people'):
 
-    # TODO load data, make an iterator etc
-    data = np.loadtxt('data.dat', delimiter=',', dtype=str)
-    #
+    raw_data = np.loadtxt(data_path, delimiter=',', dtype=str)
+
+    by_presenter = {}
+    for i, key in enumerate(raw_data[:,0]):
+        if key not in by_presenter:
+            by_presenter[key] = []
+        by_presenter[key].append(raw_data[i,1:])
+    for key, val in by_presenter.items():
+        by_presenter[key] = np.array(val)
+
+    presenters = [key for key, val in by_presenter.items() if len(val)>1]
+    presenters_pic = {key: f'{people_dir}/{key.lower()}.jpg' for key in presenters}
+
+    if randomize:
+        presenter_pairs = ((pop_random(presenters), pop_random(presenters)) for _ in range(len(presenters)//2)) # generator since we yeild it later
+    else:
+        raise NotImplementedError
+
+    def next_problem():
+        p1, p2 = next(presenter_pairs)
+        data_chunks = (by_presenter[p1], by_presenter[p2])
+        if_correct = random.choice([True, False])
+        if not if_correct:
+            p1, p2 = p2, p1
+        return (presenters_pic[p1], presenters_pic[p2]), data_chunks, if_correct
+
+    return next_problem
+
+
+def main(datafile='data2.csv'):
+
+    next_problem = load_data(datafile, randomize=True)
 
     root = tk.Tk()
 
@@ -134,12 +168,7 @@ def main():
 
     def reset_problem():
 
-        # TODO get the data from an iterator or something
-        data_chunks = (data[:3], data[3:])
-        if_correct = True  # if the pic order is correct or not
-        person1 = 'data/clock.png'
-        person2 = 'data/moon.png'
-        #
+        (person1, person2), data_chunks, if_correct = next_problem()
 
         SCORE.set(sum(len(x) for x in data_chunks)*3)
         CORRECT.set(if_correct)
