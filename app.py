@@ -9,6 +9,22 @@ def pop_random(lst):
     return lst.pop(random.randrange(0, len(lst)))
 
 
+def image_resize(img, image_size):
+    h = image_size[1]
+    w = h * img.width / img.height
+    if w > image_size[0]:
+        w = image_size[0]
+        h = w * img.height / img.width
+    return img.resize((int(w), int(h)))
+
+
+def redraw_canvas(canvas, photo):
+    canvas.delete('all')
+    canvas.create_image(canvas.winfo_reqheight()//2,
+                        canvas.winfo_reqwidth()//2,
+                        anchor="center", image=photo)
+
+
 class ImageRow:
     def __init__(self, master, data, SCORE,
                  label_text=None, data_dir='data', padding=(4,4)):
@@ -26,10 +42,11 @@ class ImageWidget:
                  image_0_path='data/moon.png', image_size=(128,128), padding=(4,4)):
 
         self.photo_0 = ImageTk.PhotoImage(Image.open(image_0_path).resize(image_size))
-        self.photo   = ImageTk.PhotoImage(Image.open(image_path).resize(image_size))
+        self.photo   = ImageTk.PhotoImage(image_resize(Image.open(image_path), image_size))
         self.label_text = label_text
         self.widget_state = 0
         self.score = SCORE
+        self.image_size = image_size
 
         frame = tk.Frame(master)
         frame.pack(side=tk.LEFT, padx=padding[0], pady=padding[1])
@@ -44,7 +61,7 @@ class ImageWidget:
     def on_click(self, event):
         if self.widget_state<=1:
             if self.widget_state==0:
-                self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
+                redraw_canvas(self.canvas, self.photo)
             else:
                 self.label.config(text=self.label_text)
             self.widget_state += 1
@@ -58,7 +75,8 @@ class PeopleChoice:
                  image_size=(128,128), padding=(4,4),
                  switch_pics=('data/switch_camera.png', 'data/switch_camera_red.png')):
 
-        self.photos = [ImageTk.PhotoImage(Image.open(path).resize(image_size)) for path in image_paths]
+
+        self.photos = [ImageTk.PhotoImage(image_resize(Image.open(path), image_size)) for path in image_paths]
         self.switch_pics = [ImageTk.PhotoImage(Image.open(path).resize(image_size)) for path in switch_pics]
         self.widget_state = 0
         self.first_switch = 1
@@ -69,7 +87,7 @@ class PeopleChoice:
             frame = tk.Frame(master)
             frame.pack(side=tk.TOP, padx=padding[0], pady=padding[1])
             canvas = tk.Canvas(frame, width=image_size[0], height=image_size[1])
-            canvas.create_image(0, 0, anchor=tk.NW, image=photo)
+            canvas.create_image(image_size[0]//2, image_size[1]//2, anchor="center", image=photo)
             canvas.bind("<Button-1>", self.on_click)
             canvas.pack()
             return canvas
@@ -82,13 +100,13 @@ class PeopleChoice:
 
 
     def on_click(self, event):
-        self.canvas1.create_image(0, 0, anchor=tk.NW, image=self.photos[not self.widget_state])
-        self.canvas2.create_image(0, 0, anchor=tk.NW, image=self.photos[self.widget_state])
+        redraw_canvas(self.canvas1, self.photos[not self.widget_state])
+        redraw_canvas(self.canvas2, self.photos[self.widget_state])
         self.widget_state = (self.widget_state+1)%2
         self.correct.set(not self.correct.get())
         if self.first_switch:
             self.first_switch = 0
-            self.canvas_switch.create_image(0, 0, anchor=tk.NW, image=self.switch_pics[1])
+            redraw_canvas(self.canvas_switch, self.switch_pics[1])
         else:
             new_score = self.score.get() - 1
             if new_score > 0:
