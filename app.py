@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import numpy as np
 
 
-SCORE = 100
+SCORE = 100   # how many people * 3
 
 
 class ImageRow:
@@ -40,20 +40,14 @@ class ImageWidget:
 
 
     def on_click(self, event):
-        bbox = self.canvas.bbox(tk.ALL)
-        if bbox[0] <= event.x <= bbox[2] and bbox[1] <= event.y <= bbox[3]: # true anyway since event is caught?
+        global SCORE
+        if self.widget_state<=1:
             if self.widget_state==0:
                 self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
-                self.widget_state += 1
-            elif self.widget_state==1:
+            else:
                 self.label.config(text=self.label_text)
-                self.widget_state += 1
-                global SCORE
-                SCORE -= 1
-                print(f'{SCORE=}')
-
-
-
+            self.widget_state += 1
+            SCORE -= 1; print(f'{SCORE=}')
 
 
 class PeopleChoice:
@@ -64,41 +58,32 @@ class PeopleChoice:
         self.photos = [ImageTk.PhotoImage(Image.open(path).resize(image_size)) for path in image_paths]
         self.switch_pic = ImageTk.PhotoImage(Image.open(switch_pic).resize(image_size))
         self.widget_state = 0
+        self.first_switch = 1
 
-        def put_photo(master, photo, text=''):
+        def put_photo(master, photo):
             frame = tk.Frame(master)
-            frame.pack(side=tk.LEFT, padx=padding[0], pady=padding[1])
+            frame.pack(side=tk.TOP, padx=padding[0], pady=padding[1])
             canvas = tk.Canvas(frame, width=image_size[0], height=image_size[1])
             canvas.create_image(0, 0, anchor=tk.NW, image=photo)
             canvas.bind("<Button-1>", self.on_click)
             canvas.pack()
-            label = tk.Label(frame, text=text, fg="black", font=tkFont.Font(size=24))
-            label.pack()
-            return label
+            return canvas
 
         self.frame = tk.Frame(master)
         self.frame.pack(side=tk.TOP, padx=16*padding[0], pady=16*padding[1])
-        self.label1 = put_photo(self.frame, self.photos[0], text='#1')
-        put_photo(self.frame, self.switch_pic, text='')
-        self.label2 = put_photo(self.frame, self.photos[1], text='#2')
+        self.canvas1 = put_photo(self.frame, self.photos[0])
+        put_photo(self.frame, self.switch_pic)
+        self.canvas2 = put_photo(self.frame, self.photos[1])
 
 
     def on_click(self, event):
-        self.label1.config(text=f'#{(not self.widget_state)+1}')
-        self.label2.config(text=f'#{self.widget_state+1}')
+        self.canvas1.create_image(0, 0, anchor=tk.NW, image=self.photos[not self.widget_state])
+        self.canvas2.create_image(0, 0, anchor=tk.NW, image=self.photos[self.widget_state])
         self.widget_state = (self.widget_state+1)%2
-
-
-
-
-
-
-
-
-
-
-
-
+        if self.first_switch:
+            self.first_switch = 0
+        else:
+            global SCORE; SCORE -= 1; print(f'{SCORE=}')
 
 
 def main():
@@ -108,11 +93,16 @@ def main():
 
     root = tk.Tk()
 
+    frame1 = tk.Frame(root)
+    frame1.pack(side=tk.LEFT)
+    PeopleChoice(frame1, ('data/clock.png', 'data/moon.png'))
+
+    frame2 = tk.Frame(root)
+    frame2.pack(side=tk.LEFT)
     for i, chunk in enumerate(data_chunks):
-        frame = ImageRow(root, chunk, label_text=f'Set #{i+1}')
+        frame = ImageRow(frame2, chunk)
 
 
-    PeopleChoice(root, ('data/clock.png', 'data/moon.png'))
 
 
     root.mainloop()
