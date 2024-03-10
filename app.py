@@ -4,10 +4,16 @@ from PIL import Image, ImageTk
 import numpy as np
 
 
+SCORE = 100
+
+
 class ImageRow:
-    def __init__(self, master, data, data_dir='data'):
-        self.frame = tk.Frame(master)
+    def __init__(self, master, data, label_text=None, data_dir='data'):
+        self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP)
+        if label_text is not None:
+            self.label = tk.Label(self.frame, text=label_text, fg="black", font=tkFont.Font(size=16))
+            self.label.pack()
         self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'))
                               for (name, path) in data]
 
@@ -42,6 +48,9 @@ class ImageWidget:
             elif self.widget_state==1:
                 self.label.config(text=self.label_text)
                 self.widget_state += 1
+                global SCORE
+                SCORE -= 1
+                print(f'{SCORE=}')
 
 
 def main():
@@ -51,9 +60,12 @@ def main():
 
     root = tk.Tk()
 
-    frames = [ImageRow(root, chunk) for chunk in data_chunks]
+    for i, chunk in enumerate(data_chunks):
+        frame = ImageRow(root, chunk, label_text=f'Set #{i+1}')
 
     root.mainloop()
+
+    print(f'{SCORE=}')
 
 
 if __name__ == "__main__":
