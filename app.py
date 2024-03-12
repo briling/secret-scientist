@@ -135,8 +135,8 @@ class GameControls:
 
 
     def submit(self):
-        score = self.score.get()
-        self.total.set(self.total.get() + (self.correct.get()*2-1)*score)
+        self.total.set(self.total.get() + (self.correct.get()*2-1)*self.score.get())
+        self.label_total.config(fg=('green' if self.correct.get() else 'red'))
         self.post_submit_hook()
 
 
@@ -163,10 +163,10 @@ def load_data(data_path, randomize, people_dir='people'):
     def next_problem():
         p1, p2 = next(presenter_pairs)
         data_chunks = (by_presenter[p1], by_presenter[p2])
-        if_correct = random.choice([True, False])
-        if not if_correct:
+        is_correct_order = random.choice([True, False])
+        if not is_correct_order:
             p1, p2 = p2, p1
-        return (presenters_pic[p1], presenters_pic[p2]), data_chunks, if_correct
+        return (presenters_pic[p1], presenters_pic[p2]), data_chunks, is_correct_order
 
     return next_problem
 
@@ -181,20 +181,28 @@ def main(datafile='data2.csv'):
     TOTAL = tk.IntVar(value=0)
     CORRECT = tk.BooleanVar(value=False)
 
-    frames = [tk.Frame(root) for i in range(3)]
+    frames_outer = [tk.Frame(root) for i in range(2)]
+    [frame.pack() for frame in frames_outer]
+
+    problem_idx = tk.IntVar(value=1)
+    title = tk.Label(frames_outer[0], '', fg="black", font=tkFont.Font(size=28))
+    title.pack()
+
+    frames = [tk.Frame(frames_outer[1]) for i in range(3)]
     [frame.pack(side=tk.LEFT) for frame in frames]
 
     def reset_problem():
-
-        (person1, person2), data_chunks, if_correct = next_problem()
-
+        root.title(f'Problem #{problem_idx.get()}')
+        title.config(text=f'Problem #{problem_idx.get()}')
+        (person1, person2), data_chunks, is_correct_order = next_problem()
         SCORE.set(sum(len(x) for x in data_chunks)*3)
-        CORRECT.set(if_correct)
+        CORRECT.set(is_correct_order)
         for widgets in frames[0].winfo_children() + frames[1].winfo_children():
             widgets.destroy()
         PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
         for i, chunk in enumerate(data_chunks):
             frame = ImageRow(frames[1], chunk, SCORE)
+        problem_idx.set(problem_idx.get()+1)
 
     GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
     reset_problem()
