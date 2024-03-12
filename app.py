@@ -184,7 +184,7 @@ def main(datafile='data2.csv'):
     frames_outer = [tk.Frame(root) for i in range(2)]
     [frame.pack() for frame in frames_outer]
 
-    problem_idx = tk.IntVar(value=1)
+    problem_idx = tk.IntVar(value=0)
     title = tk.Label(frames_outer[0], '', fg="black", font=tkFont.Font(size=28))
     title.pack()
 
@@ -192,17 +192,23 @@ def main(datafile='data2.csv'):
     [frame.pack(side=tk.LEFT) for frame in frames]
 
     def reset_problem():
-        root.title(f'Problem #{problem_idx.get()}')
-        title.config(text=f'Problem #{problem_idx.get()}')
-        (person1, person2), data_chunks, is_correct_order = next_problem()
-        SCORE.set(sum(len(x) for x in data_chunks)*3)
-        CORRECT.set(is_correct_order)
-        for widgets in frames[0].winfo_children() + frames[1].winfo_children():
-            widgets.destroy()
-        PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
-        for i, chunk in enumerate(data_chunks):
-            frame = ImageRow(frames[1], chunk, SCORE)
-        problem_idx.set(problem_idx.get()+1)
+        try:
+            (person1, person2), data_chunks, is_correct_order = next_problem()
+            SCORE.set(sum(len(x) for x in data_chunks)*3)
+            CORRECT.set(is_correct_order)
+            for widgets in frames[0].winfo_children() + frames[1].winfo_children():
+                widgets.destroy()
+            PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
+            for i, chunk in enumerate(data_chunks):
+                frame = ImageRow(frames[1], chunk, SCORE)
+            problem_idx.set(problem_idx.get()+1)
+            title_text = f'Problem #{problem_idx.get()}'
+        except:
+            for widgets in frames_outer[1].winfo_children():
+                widgets.destroy()
+            title_text = f'Results: {TOTAL.get()} points'
+        root.title(title_text)
+        title.config(text=title_text)
 
     GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
     reset_problem()
