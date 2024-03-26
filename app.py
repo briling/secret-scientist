@@ -27,7 +27,7 @@ def redraw_canvas(canvas, photo):
 
 class ImageRow:
     def __init__(self, master, data, SCORE,
-                 label_text=None, data_dir='data', padding=(4,4)):
+                 label_text=None, data_dir='scientists', padding=(4,4)):
         self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP, padx=8*padding[0], pady=8*padding[1])
         if label_text is not None:
@@ -145,10 +145,10 @@ def load_data(data_path, randomize, people_dir='people'):
     raw_data = np.loadtxt(data_path, delimiter=',', dtype=str)
 
     by_presenter = {}
-    for i, key in enumerate(raw_data[:,0]):
+    for i, key in enumerate(raw_data[:,1]):
         if key not in by_presenter:
             by_presenter[key] = []
-        by_presenter[key].append(raw_data[i,1:])
+        by_presenter[key].append(raw_data[i,2:])
     for key, val in by_presenter.items():
         by_presenter[key] = np.array(val)
 
@@ -171,7 +171,7 @@ def load_data(data_path, randomize, people_dir='people'):
     return next_problem
 
 
-def main(datafile='data2.csv'):
+def main(datafile='data/data2.csv'):
 
     next_problem = load_data(datafile, randomize=True)
 
