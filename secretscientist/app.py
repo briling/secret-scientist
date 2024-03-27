@@ -28,19 +28,19 @@ def redraw_canvas(canvas, photo):
 
 
 class ImageRow:
-    def __init__(self, master, data, SCORE,
+    def __init__(self, master, data, SCORE, COST,
                  label_text=None, data_dir=f'{DIR}/scientists', padding=(4,4)):
         self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP, padx=8*padding[0], pady=8*padding[1])
         if label_text is not None:
             self.label = tk.Label(self.frame, text=label_text, fg="black", font=tkFont.Font(size=16))
             self.label.pack()
-        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE)
+        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE, COST)
                               for (name, path) in data]
 
 
 class ImageWidget:
-    def __init__(self, master, image_path, label_text, SCORE,
+    def __init__(self, master, image_path, label_text, SCORE, COST,
                  image_0_path=f'{DIR}/data/moon.png', image_size=(128,128), padding=(4,4)):
 
         self.photo_0 = ImageTk.PhotoImage(Image.open(image_0_path).resize(image_size))
@@ -48,6 +48,7 @@ class ImageWidget:
         self.label_text = label_text
         self.widget_state = 0
         self.score = SCORE
+        self.cost = COST
         self.image_size = image_size
 
         frame = tk.Frame(master)
@@ -67,9 +68,11 @@ class ImageWidget:
             else:
                 self.label.config(text=self.label_text)
             self.widget_state += 1
-            new_score = self.score.get() - 1
+            new_score = self.score.get() - self.cost.get()
             if new_score > 0:
                 self.score.set(new_score)
+            else:
+                self.score.set(1)
 
 
 class PeopleChoice:
@@ -137,7 +140,12 @@ class GameControls:
 
 
     def submit(self):
-        self.total.set(self.total.get() + (self.correct.get()*2-1)*self.score.get())
+        if self.correct.get():
+            new_total = self.total.get() + self.score.get()
+        else:
+            new_total = self.total.get() + self.score.get() - 200
+
+        self.total.set(new_total)
         self.label_total.config(fg=('green' if self.correct.get() else 'red'))
         self.post_submit_hook()
 
@@ -184,6 +192,7 @@ def main(datafile=f'{DIR}/data/data.csv'):
 
     SCORE = tk.IntVar(value=0)
     TOTAL = tk.IntVar(value=0)
+    COST = tk.IntVar(value=0)
     CORRECT = tk.BooleanVar(value=False)
 
     frames_outer = [tk.Frame(root) for i in range(2)]
@@ -199,13 +208,14 @@ def main(datafile=f'{DIR}/data/data.csv'):
     def reset_problem():
         try:
             (person1, person2), data_chunks, is_correct_order = next_problem()
-            SCORE.set(sum(len(x) for x in data_chunks)*3)
+            SCORE.set(100)
+            COST.set(100/(sum(len(x) for x in data_chunks)*2))
             CORRECT.set(is_correct_order)
             for widgets in frames[0].winfo_children() + frames[1].winfo_children():
                 widgets.destroy()
             PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
             for i, chunk in enumerate(data_chunks):
-                frame = ImageRow(frames[1], chunk, SCORE)
+                frame = ImageRow(frames[1], chunk, SCORE, COST)
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
         except Exception as e:
