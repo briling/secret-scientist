@@ -1,9 +1,11 @@
+import os
 import random
 import numpy as np
 import tkinter as tk
 import tkinter.font as tkFont
 from PIL import Image, ImageTk
 
+DIR = os.path.dirname(__file__)+'/'
 
 def pop_random(lst):
     return lst.pop(random.randrange(0, len(lst)))
@@ -27,7 +29,7 @@ def redraw_canvas(canvas, photo):
 
 class ImageRow:
     def __init__(self, master, data, SCORE,
-                 label_text=None, data_dir='scientists', padding=(4,4)):
+                 label_text=None, data_dir=f'{DIR}/scientists', padding=(4,4)):
         self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP, padx=8*padding[0], pady=8*padding[1])
         if label_text is not None:
@@ -39,7 +41,7 @@ class ImageRow:
 
 class ImageWidget:
     def __init__(self, master, image_path, label_text, SCORE,
-                 image_0_path='data/moon.png', image_size=(128,128), padding=(4,4)):
+                 image_0_path=f'{DIR}/data/moon.png', image_size=(128,128), padding=(4,4)):
 
         self.photo_0 = ImageTk.PhotoImage(Image.open(image_0_path).resize(image_size))
         self.photo   = ImageTk.PhotoImage(image_resize(Image.open(image_path), image_size))
@@ -73,7 +75,7 @@ class ImageWidget:
 class PeopleChoice:
     def __init__(self, master, image_paths, SCORE, CORRECT,
                  image_size=(128,128), padding=(4,4),
-                 switch_pics=('data/switch_camera.png', 'data/switch_camera_red.png')):
+                 switch_pics=(f'{DIR}/data/switch_camera.png', f'{DIR}/data/switch_camera_red.png')):
 
 
         self.photos = [ImageTk.PhotoImage(image_resize(Image.open(path), image_size)) for path in image_paths]
@@ -140,7 +142,7 @@ class GameControls:
         self.post_submit_hook()
 
 
-def load_data(data_path, randomize, people_dir='people'):
+def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
 
     raw_data = np.loadtxt(data_path, delimiter=',', dtype=str)
 
@@ -174,7 +176,7 @@ def load_data(data_path, randomize, people_dir='people'):
     return next_problem
 
 
-def main(datafile='data/data.csv'):
+def main(datafile=f'{DIR}/data/data.csv'):
 
     next_problem = load_data(datafile, randomize=True)
 
