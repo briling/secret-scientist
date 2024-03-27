@@ -6,7 +6,6 @@ VERSION="1.0.0"
 
 
 def get_requirements():
-    return []
     fname = f"{os.path.dirname(os.path.realpath(__file__))}/requirements.txt"
     with open(fname) as f:
         install_requires = f.read().splitlines()
