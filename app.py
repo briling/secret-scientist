@@ -54,7 +54,7 @@ class ImageWidget:
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo_0)
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.pack()
-        self.label = tk.Label(frame, text="\n", fg="black", font=tkFont.Font(size=16))
+        self.label = tk.Label(frame, text="\n", fg="black", font=tkFont.Font(size=16), height=5, wraplength=image_size[0])
         self.label.pack()
 
 
@@ -150,6 +150,7 @@ def load_data(data_path, randomize, people_dir='people'):
             by_presenter[key] = []
         by_presenter[key].append(raw_data[i,2:])
     for key, val in by_presenter.items():
+        random.shuffle(val)
         by_presenter[key] = np.array(val)
 
     presenters = [key for key, val in by_presenter.items() if len(val)>1]
@@ -163,6 +164,8 @@ def load_data(data_path, randomize, people_dir='people'):
     def next_problem():
         p1, p2 = next(presenter_pairs)
         data_chunks = (by_presenter[p1], by_presenter[p2])
+        min_len = min(len(x) for x in data_chunks)
+        data_chunks = (data_chunks[0][:min_len], data_chunks[1][:min_len])
         is_correct_order = random.choice([True, False])
         if not is_correct_order:
             p1, p2 = p2, p1
