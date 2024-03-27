@@ -1,3 +1,4 @@
+import time
 import os
 import random
 import numpy as np
@@ -123,6 +124,7 @@ class GameControls:
         self.score = SCORE
         self.total = TOTAL
         self.correct = CORRECT
+        self.image_rows = None
         self.frame = tk.Frame(master)
         self.frame.pack(side=tk.TOP, padx=16*padding[0], pady=16*padding[1])
         label1 = tk.Label(self.frame, text='SCORE:', fg="black", font=tkFont.Font(size=28))
@@ -147,7 +149,7 @@ class GameControls:
 
         self.total.set(new_total)
         self.label_total.config(fg=('green' if self.correct.get() else 'red'))
-        self.post_submit_hook()
+        self.image_rows = self.post_submit_hook()
 
 
 def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
@@ -206,6 +208,18 @@ def main(datafile=f'{DIR}/data/data.csv'):
     [frame.pack(side=tk.LEFT) for frame in frames]
 
     def reset_problem():
+
+        if game_controls.image_rows is not None:
+            score = SCORE.get()
+            for row in game_controls.image_rows:
+                for widget in row.image_widgets:
+                    widget.on_click(None)
+                    widget.on_click(None)
+            SCORE.set(score)
+            var = tk.IntVar()
+            root.after(10000, var.set, 1)
+            root.wait_variable(var)
+
         try:
             (person1, person2), data_chunks, is_correct_order = next_problem()
             SCORE.set(100)
@@ -214,8 +228,7 @@ def main(datafile=f'{DIR}/data/data.csv'):
             for widgets in frames[0].winfo_children() + frames[1].winfo_children():
                 widgets.destroy()
             PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
-            for i, chunk in enumerate(data_chunks):
-                frame = ImageRow(frames[1], chunk, SCORE, COST)
+            image_rows = [ImageRow(frames[1], chunk, SCORE, COST) for chunk in data_chunks]
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
         except Exception as e:
@@ -223,11 +236,13 @@ def main(datafile=f'{DIR}/data/data.csv'):
             for widgets in frames_outer[1].winfo_children():
                 widgets.destroy()
             title_text = f'Results: {TOTAL.get()} points'
+            image_rows = None
         root.title(title_text)
         title.config(text=title_text)
+        return image_rows
 
-    GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
-    reset_problem()
+    game_controls = GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
+    game_controls.image_rows = reset_problem()
     root.mainloop()
 
 
