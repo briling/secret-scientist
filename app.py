@@ -171,7 +171,7 @@ def load_data(data_path, randomize, people_dir='people'):
     return next_problem
 
 
-def main(datafile='data/data2.csv'):
+def main(datafile='data/data.csv'):
 
     next_problem = load_data(datafile, randomize=True)
 
@@ -203,7 +203,8 @@ def main(datafile='data/data2.csv'):
                 frame = ImageRow(frames[1], chunk, SCORE)
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
-        except:
+        except Exception as e:
+            #print(e)
             for widgets in frames_outer[1].winfo_children():
                 widgets.destroy()
             title_text = f'Results: {TOTAL.get()} points'
