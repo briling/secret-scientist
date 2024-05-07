@@ -1,6 +1,8 @@
+import sys
 import time
 import os
 import random
+import argparse
 import numpy as np
 import tkinter as tk
 import tkinter.font as tkFont
@@ -186,8 +188,16 @@ def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
     return next_problem
 
 
-def main(datafile=f'{DIR}/data/data.csv'):
+def main(argv):
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--demo',  action='store_true')
+    args = parser.parse_args()
+
+    if args.demo:
+        datafile = f'{DIR}/data/demo.csv'
+    else:
+        datafile = f'{DIR}/data/data.csv'
     next_problem = load_data(datafile, randomize=True)
 
     root = tk.Tk()
@@ -247,4 +257,4 @@ def main(datafile=f'{DIR}/data/data.csv'):
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
