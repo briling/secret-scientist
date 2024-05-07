@@ -151,7 +151,7 @@ class GameControls:
 
         self.total.set(new_total)
         self.label_total.config(fg=('green' if self.correct.get() else 'red'))
-        self.image_rows = self.post_submit_hook()
+        self.image_rows, self.people_choice = self.post_submit_hook()
 
 
 def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
@@ -225,6 +225,8 @@ def main(argv):
                 for widget in row.image_widgets:
                     widget.on_click(None)
                     widget.on_click(None)
+            if not game_controls.people_choice.correct.get():
+                game_controls.people_choice.on_click(None)
             SCORE.set(score)
             var = tk.IntVar()
             root.after(10000, var.set, 1)
@@ -237,7 +239,7 @@ def main(argv):
             CORRECT.set(is_correct_order)
             for widgets in frames[0].winfo_children() + frames[1].winfo_children():
                 widgets.destroy()
-            PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
+            people_choice = PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
             image_rows = [ImageRow(frames[1], chunk, SCORE, COST) for chunk in data_chunks]
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
@@ -249,10 +251,10 @@ def main(argv):
             image_rows = None
         root.title(title_text)
         title.config(text=title_text)
-        return image_rows
+        return image_rows, people_choice
 
     game_controls = GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
-    game_controls.image_rows = reset_problem()
+    game_controls.image_rows, game_controls.people_choice = reset_problem()
     root.mainloop()
 
 
