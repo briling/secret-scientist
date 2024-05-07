@@ -192,6 +192,7 @@ def main(argv):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--demo',  action='store_true')
+    parser.add_argument('--timeout', type=int, default=5, help='timeout in seconds')
     args = parser.parse_args()
 
     if args.demo:
@@ -229,7 +230,7 @@ def main(argv):
                 game_controls.people_choice.on_click(None)
             SCORE.set(score)
             var = tk.IntVar()
-            root.after(10000, var.set, 1)
+            root.after(args.timeout*1000, var.set, 1)
             root.wait_variable(var)
 
         try:
