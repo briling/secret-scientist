@@ -245,7 +245,7 @@ def main(argv):
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
         except Exception as e:
-            #print(e)
+            print(e)
             for widgets in frames_outer[1].winfo_children():
                 widgets.destroy()
             title_text = f'Results: {TOTAL.get()} points'
