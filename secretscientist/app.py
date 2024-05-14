@@ -33,13 +33,14 @@ def redraw_canvas(canvas, photo):
 class ImageRow:
     def __init__(self, master, data, SCORE, COST,
                  label_text=None, data_dir=f'{DIR}/scientists', padding=(4,4),
-                 fs=16):
+                 image_size=(128,128), fs=16):
         self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP, padx=8*padding[0], pady=8*padding[1])
         if label_text is not None:
             self.label = tk.Label(self.frame, text=label_text, fg="black", font=tkFont.Font(size=fs))
             self.label.pack()
-        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE, COST, fs=fs)
+        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE, COST,
+                                          image_size=image_size, fs=fs)
                               for (name, path) in data]
 
 
@@ -192,9 +193,10 @@ def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
 def main(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--demo',    action='store_true')
-    parser.add_argument('--timeout', type=int, default=5,  help='timeout in seconds')
-    parser.add_argument('--fs',      type=int, default=16, help='font size')
+    parser.add_argument('--demo',    action='store_true',   help='show a demo')
+    parser.add_argument('--timeout', type=int, default=5,   help='timeout in seconds')
+    parser.add_argument('--fs',      type=int, default=16,  help='font size')
+    parser.add_argument('--size',    type=int, default=128, help='image size')
     args = parser.parse_args()
 
     if args.demo:
@@ -242,8 +244,9 @@ def main(argv):
             CORRECT.set(is_correct_order)
             for widgets in frames[0].winfo_children() + frames[1].winfo_children():
                 widgets.destroy()
-            people_choice = PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
-            image_rows = [ImageRow(frames[1], chunk, SCORE, COST, fs=args.fs) for chunk in data_chunks]
+            people_choice = PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT, image_size=(args.size, args.size))
+            image_rows = [ImageRow(frames[1], chunk, SCORE, COST,
+                                   image_size=(args.size, args.size), fs=args.fs) for chunk in data_chunks]
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
         except Exception as e:
