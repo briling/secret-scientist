@@ -32,19 +32,20 @@ def redraw_canvas(canvas, photo):
 
 class ImageRow:
     def __init__(self, master, data, SCORE, COST,
-                 label_text=None, data_dir=f'{DIR}/scientists', padding=(4,4)):
+                 label_text=None, data_dir=f'{DIR}/scientists', padding=(4,4),
+                 fs=16):
         self.frame = tk.Frame(master, bd=8, relief=tk.RIDGE)
         self.frame.pack(side=tk.TOP, padx=8*padding[0], pady=8*padding[1])
         if label_text is not None:
-            self.label = tk.Label(self.frame, text=label_text, fg="black", font=tkFont.Font(size=16))
+            self.label = tk.Label(self.frame, text=label_text, fg="black", font=tkFont.Font(size=fs))
             self.label.pack()
-        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE, COST)
+        self.image_widgets = [ImageWidget(self.frame, f'{data_dir}/{path}', name.replace(' \\n ','\n'), SCORE, COST, fs=fs)
                               for (name, path) in data]
 
 
 class ImageWidget:
     def __init__(self, master, image_path, label_text, SCORE, COST,
-                 image_0_path=f'{DIR}/data/moon.png', image_size=(128,128), padding=(4,4)):
+                 image_0_path=f'{DIR}/data/moon.png', image_size=(128,128), padding=(4,4), fs=16):
 
         self.photo_0 = ImageTk.PhotoImage(Image.open(image_0_path).resize(image_size))
         self.photo   = ImageTk.PhotoImage(image_resize(Image.open(image_path), image_size))
@@ -60,7 +61,7 @@ class ImageWidget:
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo_0)
         self.canvas.bind("<Button-1>", self.on_click)
         self.canvas.pack()
-        self.label = tk.Label(frame, text="\n", fg="black", font=tkFont.Font(size=16), height=5, wraplength=image_size[0])
+        self.label = tk.Label(frame, text="\n", fg="black", font=tkFont.Font(size=fs), height=5, wraplength=image_size[0])
         self.label.pack()
 
 
@@ -122,24 +123,24 @@ class PeopleChoice:
 
 
 class GameControls:
-    def __init__(self, master, SCORE, TOTAL, CORRECT, post_submit_hook, padding=(4,4)):
+    def __init__(self, master, SCORE, TOTAL, CORRECT, post_submit_hook, padding=(4,4), fs=16):
         self.score = SCORE
         self.total = TOTAL
         self.correct = CORRECT
         self.image_rows = None
         self.frame = tk.Frame(master)
         self.frame.pack(side=tk.TOP, padx=16*padding[0], pady=16*padding[1])
-        label1 = tk.Label(self.frame, text='SCORE:', fg="black", font=tkFont.Font(size=28))
-        self.label_score = tk.Label(self.frame, textvariable=SCORE, fg="black", font=tkFont.Font(size=32))
-        label2 = tk.Label(self.frame, text='TOTAL:', fg="black", font=tkFont.Font(size=28))
-        self.label_total = tk.Label(self.frame, textvariable=TOTAL, fg="black", font=tkFont.Font(size=32))
+        label1 = tk.Label(self.frame, text='SCORE:', fg="black", font=tkFont.Font(size=fs//16*28))
+        self.label_score = tk.Label(self.frame, textvariable=SCORE, fg="black", font=tkFont.Font(size=fs*2))
+        label2 = tk.Label(self.frame, text='TOTAL:', fg="black", font=tkFont.Font(size=fs//16*28))
+        self.label_total = tk.Label(self.frame, textvariable=TOTAL, fg="black", font=tkFont.Font(size=fs*2))
         label1.pack()
         self.label_score.pack()
         label2.pack()
         self.label_total.pack()
 
         self.post_submit_hook = post_submit_hook
-        self.button = tk.Button(self.frame, text="SUBMIT", font=tkFont.Font(size=28), command=self.submit)
+        self.button = tk.Button(self.frame, text="SUBMIT", font=tkFont.Font(size=fs//16*28), command=self.submit)
         self.button.pack()
 
 
@@ -191,8 +192,9 @@ def load_data(data_path, randomize, people_dir=f'{DIR}/people'):
 def main(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--demo',  action='store_true')
-    parser.add_argument('--timeout', type=int, default=5, help='timeout in seconds')
+    parser.add_argument('--demo',    action='store_true')
+    parser.add_argument('--timeout', type=int, default=5,  help='timeout in seconds')
+    parser.add_argument('--fs',      type=int, default=16, help='font size')
     args = parser.parse_args()
 
     if args.demo:
@@ -212,7 +214,7 @@ def main(argv):
     [frame.pack() for frame in frames_outer]
 
     problem_idx = tk.IntVar(value=0)
-    title = tk.Label(frames_outer[0], '', fg="black", font=tkFont.Font(size=28))
+    title = tk.Label(frames_outer[0], '', fg="black", font=tkFont.Font(size=args.fs//16*28))
     title.pack()
 
     frames = [tk.Frame(frames_outer[1]) for i in range(3)]
@@ -241,7 +243,7 @@ def main(argv):
             for widgets in frames[0].winfo_children() + frames[1].winfo_children():
                 widgets.destroy()
             people_choice = PeopleChoice(frames[0], (person1, person2), SCORE, CORRECT)
-            image_rows = [ImageRow(frames[1], chunk, SCORE, COST) for chunk in data_chunks]
+            image_rows = [ImageRow(frames[1], chunk, SCORE, COST, fs=args.fs) for chunk in data_chunks]
             problem_idx.set(problem_idx.get()+1)
             title_text = f'Problem #{problem_idx.get()}'
         except Exception as e:
@@ -254,7 +256,7 @@ def main(argv):
         title.config(text=title_text)
         return image_rows, people_choice
 
-    game_controls = GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem)
+    game_controls = GameControls(frames[2], SCORE, TOTAL, CORRECT, reset_problem, fs=args.fs)
     game_controls.image_rows, game_controls.people_choice = reset_problem()
     root.mainloop()
 
