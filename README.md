@@ -1,4 +1,4 @@
-# PLEASE DO NOT LOOK INSIDE IF YOU'RE FROM LCMD
+# Secret scientist game
 
 
 ### install 
